@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" />
+  <link href="https://fonts.googleapis.com/css?family=Work+Sans:200,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+  <title>Notes App</title>
+</head>
+
+<body>
+  <style>
+    .notes,
+    form {
+      height: 100%;
+      width: 100%;
+      max-width: 500px;
+      min-width: 400px;
+      border: 1px solid red;
+    }
+
+    .show-form {
+      display: none;
+    }
+
+    @media screen and (max-width: 800px) {
+      form {
+        display: none;
+      }
+
+      .show-form {
+        position: absolute;
+        background-color: greenyellow;
+        top: 100px;
+        right: 50px;
+        height: 40px;
+        width: 40px;
+        text-align: center;
+        font-size: x-large;
+        cursor: pointer;
+        border-radius: 50%;
+        display: unset;
+      }
+    }
+  </style>
+  <main class="bg-gray-200 flex justify-center items-center h-screen gap-4 p-20 relative">
+    <div class="notes p-4 rounded-md shadow-2xl bg-white">
+      <span class="flex justify-between">
+        <h1 class="text-xl mb-4">Notes</h1>
+        <div class="filters">
+          <select onchange="filterNotesByCategoryAndUsername()" name="username-filter" id="username-filter">
+            <option value="">All Users</option>
+          </select>
+          <select onchange="filterNotesByCategoryAndUsername()" name="category-filter" id="category-filter">
+            <option value="">All</option>
+            <option value="home">Home</option>
+            <option value="hobbies">Hobbies</option>
+            <option value="work">Work</option>
+          </select>
+        </div>
+      </span>
+      <div class="notes-container flex flex-col gap-5"></div>
+    </div>
+    <form class="rounded-md shadow-2xl bg-white p-4">
+      <div class="flex place-content-between p-4 items-center">
+        <div class="flex gap-2">
+          <label for="profilePicture">Avatar:</label>
+          <select name="profilePicture" id="profilePic" aria-placeholder="Avatar">
+            <option value="default" selected>Default</option>
+            <option value="boy">Boy</option>
+            <option value="girl">Girl</option>
+          </select>
+        </div>
+        <div class="flex gap-2 items-center justify-end">
+          <label for="userName">Username: </label>
+          <input class="border-2 border rounded-md px-2 py-1 w-1/2" type="text" name="userName" id="userName">
+        </div>
+      </div>
+      <textarea class="border-2 rounded-md w-full bg-gray-200" name="" id="" cols="30" rows="10"></textarea>
+      <p id="text-area-error" class="hidden text-red-500">Please add some content!</p>
+      <!-- note content -->
+      <!-- note priority 1-5 -->
+      <div class="flex flex-col">
+        <style>
+          input[type='radio'] {
+            max-width: 50px;
+            display: inline;
+          }
+        </style>
+        <h1 class="text-xl my-4">Priority</h1>
+        <div class="radio-input">
+          <input type="radio" id="priority-1" name="priority" value="1" />
+          <label for="priority-1">Very Low</label>
+        </div>
+        <div class="radio-input"><input type="radio" id="priority-2" name="priority" value="2" /> <label
+            for="priority-2">Low</label></div>
+        <div class="radio-input"><input type="radio" id="priority-3" name="priority" value="3" /> <label
+            for="priority-3">Medium</label></div>
+        <div class="radio-input"><input type="radio" id="priority-4" name="priority" value="4" /> <label
+            for="priority-4">High</label></div>
+        <div class="radio-input"><input type="radio" id="priority-5" name="priority" value="5" /> <label
+            for="priority-5">Very High</label></div>
+        <p id="priority-input-error" class="hidden text-red-500">Please pick a priority!</p>
+      </div>
+      <!-- note category -->
+      <h1 class="text-xl my-4">Category</h1>
+      <div>
+        <select name="category" id="category">
+          <option value="">Select Category</option>
+          <option value="home">Home</option>
+          <option value="hobbies">Hobbies</option>
+          <option value="work">Work</option>
+        </select>
+        <p id="category-input-error" class="hidden text-red-500">Please select a category!</p>
+      </div>
+
+      <button onclick="addNote()" class="bg-green-200 p-2 rounded-md" type="button">Add Note</button>
+    </form>
+  </main>
+  <script>
+
+    let categoryToClassesMap = {
+      home: "bg-red-200",
+      hobbies: "bg-green-200",
+      work: "bg-yellow-200"
+    };
+
+    let profileToPictureMap = {
+      default: "profiles/user.png",
+      boy: "profiles/boy.png",
+      girl: "profiles/girl.png"
+    }
+
+    let notesContainer = document.querySelector('.notes-container');
+    let notes = localStorage.getItem('notes') ? JSON.parse(localStorage.getItem('notes')) : [];
+
+    updateNotesArray(notes)
+    function updateUINotesContainer(notesToDisplay = null) {
+      notesToDisplay = notesToDisplay || notes
+      notesContainer.innerHTML = ''
+      notesToDisplay.forEach(function (noteItem) {
+        let noteHTML = generatNoteHTML(noteItem);
+        notesContainer.innerHTML += noteHTML;
+      });
+    }
+
+    function generatNoteHTML(noteItem) {
+      return `
+        <div class="flex items-center ${categoryToClassesMap[noteItem.category]} gap-5 p-4 rounded-md bg-gray-200 relative">
+            <div class="h-12 w-12 overflow-hidden rounded-full">
+                <img src="${profileToPictureMap[noteItem.avatar]}" alt="" />
+            </div>
+            <div>
+              <p class="font-semibold"> ${noteItem.userName} </p>
+              <p>${noteItem.content}</p>
+            </div>
+            <div class="actions absolute top-4 right-4 flex gap-3">
+              <p class="rounded-full h-8 w-8 p-3 bg-white flex justify-center items-center cursor-pointer">
+                <span onclick="editNote('${noteItem.id}')"> edit </span>
+              </p>
+              <p class="rounded-full h-8 w-8 p-3 bg-white flex justify-center items-center cursor-pointer">
+                <span onclick="deleteNote('${noteItem.id}')">X</span>
+              </p>
+            </div>
+        </div>
+        `;
+    }
+
+    function deleteNote(noteID) {
+      let newNotes = notes.filter(function (note) {
+        // if same ID that we want to delete, return false
+        if (noteID === note.id) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      updateNotesArray(newNotes)
+    }
+
+    let textAreaInput = document.querySelector('textarea')
+    let textAreaInputError = document.querySelector('#text-area-error')
+
+    let categoryInput = document.querySelector('#category')
+    let categoryInputError = document.querySelector('#category-input-error')
+
+    let avatarInput = document.querySelector('#profilePic')
+
+    let userNameInput = document.querySelector('#userName')
+
+    function addNote() {
+      let contentValid = validateTextAreaInput();
+      let priorityValid = validatePriorityInput();
+      let categoryValid = validateCategoryInput();
+      // validate user inputs
+      if (contentValid && priorityValid && categoryValid) {
+        let priorityInputValue = document.querySelector('input[name="priority"]:checked').value
+        let newNote = {
+          id: noteBeingEdited?.id ? noteBeingEdited.id : generateNoteID(),
+          avatar: avatarInput.value,
+          userName: userNameInput.value
+        };
+        newNote.content = textAreaInput.value
+        newNote['priority'] = priorityInputValue
+        newNote['category'] = categoryInput.value
+
+        // push to notes array
+        updateNotesArray([...notes, newNote]);
+        populateFormInputs();
+      }
+
+    }
+
+    function generateNoteID() {
+      // We can use Math.random()
+      return Date.now().toString();
+    }
+
+    function validateTextAreaInput() {
+      if (!textAreaInput.value) {
+        textAreaInputError.classList.remove('hidden')
+        return false;
+      }
+      textAreaInputError.classList.add('hidden')
+      return true;
+    }
+
+    function validatePriorityInput() {
+      let priorityInputValue = document.querySelector('input[name="priority"]:checked')?.value
+      let priorityInputError = document.querySelector('#priority-input-error')
+      if (!priorityInputValue) {
+        priorityInputError.classList.remove('hidden')
+        return false;
+      }
+      priorityInputError.classList.add('hidden')
+      return true;
+    }
+
+    function validateCategoryInput() {
+      if (!categoryInput.value) {
+        categoryInputError.classList.remove('hidden')
+        return false;
+      }
+      categoryInputError.classList.add('hidden')
+      return true;
+    }
+
+    let noteBeingEdited;
+    function editNote(noteID) {
+      // get note
+      noteBeingEdited = notes.find(function (note) {
+        return noteID === note.id
+      })
+      if (!noteBeingEdited) {
+        return;
+      }
+
+      // remove from notes array
+      deleteNote(noteID)
+
+      // populate in inputs
+      populateFormInputs(noteBeingEdited)
+    }
+
+    function populateFormInputs(noteObject = {}) {
+      // avatar
+      avatarInput.value = noteObject.avatar || 'default';
+      // username
+      userNameInput.value = noteObject.userName || '';
+      // content
+      textAreaInput.value = noteObject.content || '';
+      // priority
+      // document.querySelectorAll('input[type=radio]')[4].value
+      document.querySelectorAll('input[name="priority"]').forEach(function (radioInput) {
+        if (radioInput.value == noteObject.priority) {
+          radioInput.checked = true;
+        } else {
+          radioInput.checked = false;
+        }
+      })
+
+      // category
+      categoryInput.value = noteObject.category || ''
+
+    }
+
+    function updateNotesArray(notesArray = []) {
+      notes = notesArray
+      localStorage.setItem('notes', JSON.stringify(notes))
+      // reflect changes to UI
+      // never call outside of this function
+      updateUINotesContainer();
+      populateUsernameFilterOptions();
+    }
+
+    function sortNotesAsc() {
+      let sortedNotesArray = notes.sort(function (a, b) {
+        return a.priority - b.priority
+      })
+      updateNotesArray(sortedNotesArray)
+    }
+    function sortNotesDesc() {
+      let sortedNotesArray = notes.sort(function (a, b) {
+        return b.priority - a.priority
+      })
+      updateNotesArray(sortedNotesArray)
+    }
+
+    // function filterNotesByCategory() {
+    //   let filteredArray = notes.filter(function (noteItem) {
+    //     if (!this.event.target.value || noteItem.category == this.event.target.value) {
+    //       return true;
+    //     }
+    //     return false;
+    //   })
+
+    //   updateUINotesContainer(filteredArray)
+    // }
+
+    // Update username filter
+    function populateUsernameFilterOptions() {
+      let usernameFilterSelect = document.getElementById('username-filter');
+
+      usernameFilterSelect.innerHTML = '<option value="">All Users</option>';
+
+      // Get UNIQUE usernames from notes
+      let uniqueUsernames = [...new Set(notes.map(note => note.userName))];
+
+      uniqueUsernames.forEach(username => {
+        let option = document.createElement('option');
+        option.value = username;
+        option.textContent = username;
+        usernameFilterSelect.appendChild(option);
+      });
+    }
+
+    populateUsernameFilterOptions();
+
+    function filterNotesByCategoryAndUsername() {
+      let categoryFilterValue = document.getElementById('category-filter').value;
+      let usernameFilterValue = document.getElementById('username-filter').value;
+
+      let filteredArray = notes.filter(function (noteItem) {
+        let categoryMatch = !categoryFilterValue || noteItem.category == categoryFilterValue;
+        let usernameMatch = !usernameFilterValue || noteItem.userName == usernameFilterValue;
+
+        return categoryMatch && usernameMatch;
+      });
+
+      updateUINotesContainer(filteredArray);
+    }
+
+  </script>
+</body>
+
+</html>
