@@ -43,12 +43,16 @@
         border-radius: 50%;
         display: unset;
       }
+
     }
   </style>
-  <main class="bg-gray-200 flex justify-center items-center h-screen gap-4 p-20 relative">
+  <main class="main-container bg-gray-200 flex justify-center items-center h-screen gap-4 p-20 relative">
     <div class="notes p-4 rounded-md shadow-2xl bg-white">
       <span class="flex justify-between">
-        <h1 class="text-xl mb-4">Notes</h1>
+        <div class="flex gap-4 items-center">
+          <button onclick="toggleDarkMode()">Toggle</button>
+          <h1 class="note-container-header-text text-xl mb-4">Notes</h1>
+        </div>
         <div class="filters">
           <select onchange="filterNotesByCategoryAndUsername()" name="username-filter" id="username-filter">
             <option value="">All Users</option>
@@ -63,10 +67,10 @@
       </span>
       <div class="notes-container flex flex-col gap-5"></div>
     </div>
-    <form class="rounded-md shadow-2xl bg-white p-4">
+    <form class="notes-form rounded-md shadow-2xl bg-white p-4">
       <div class="flex place-content-between p-4 items-center">
         <div class="flex gap-2">
-          <label for="profilePicture">Avatar:</label>
+          <label class="dark-text-toggle" for="profilePicture">Avatar:</label>
           <select name="profilePicture" id="profilePic" aria-placeholder="Avatar">
             <option value="default" selected>Default</option>
             <option value="boy">Boy</option>
@@ -74,7 +78,7 @@
           </select>
         </div>
         <div class="flex gap-2 items-center justify-end">
-          <label for="userName">Username: </label>
+          <label class="dark-text-toggle" for="userName">Username: </label>
           <input class="border-2 border rounded-md px-2 py-1 w-1/2" type="text" name="userName" id="userName">
         </div>
       </div>
@@ -89,23 +93,23 @@
             display: inline;
           }
         </style>
-        <h1 class="text-xl my-4">Priority</h1>
+        <h1 class="dark-text-toggle text-xl my-4">Priority</h1>
         <div class="radio-input">
           <input type="radio" id="priority-1" name="priority" value="1" />
-          <label for="priority-1">Very Low</label>
+          <label class="dark-text-toggle" for="priority-1">Very Low</label>
         </div>
         <div class="radio-input"><input type="radio" id="priority-2" name="priority" value="2" /> <label
-            for="priority-2">Low</label></div>
+          class="dark-text-toggle" for="priority-2">Low</label></div>
         <div class="radio-input"><input type="radio" id="priority-3" name="priority" value="3" /> <label
-            for="priority-3">Medium</label></div>
+          class="dark-text-toggle" for="priority-3">Medium</label></div>
         <div class="radio-input"><input type="radio" id="priority-4" name="priority" value="4" /> <label
-            for="priority-4">High</label></div>
+          class="dark-text-toggle" for="priority-4">High</label></div>
         <div class="radio-input"><input type="radio" id="priority-5" name="priority" value="5" /> <label
-            for="priority-5">Very High</label></div>
+          class="dark-text-toggle" for="priority-5">Very High</label></div>
         <p id="priority-input-error" class="hidden text-red-500">Please pick a priority!</p>
       </div>
       <!-- note category -->
-      <h1 class="text-xl my-4">Category</h1>
+      <h1 class="dark-text-toggle text-xl my-4">Category</h1>
       <div>
         <select name="category" id="category">
           <option value="">Select Category</option>
@@ -350,6 +354,38 @@
       });
 
       updateUINotesContainer(filteredArray);
+    }
+
+    function toggleDarkMode() {
+      let mainContainer = document.querySelector('.main-container')
+      let notesContainer = document.querySelector('.notes');
+      let noteHeaderTitle = document.querySelector('.note-container-header-text');
+      let notesForm = document.querySelector('.notes-form');
+      let labels = document.querySelectorAll('.dark-text-toggle')
+
+      if(mainContainer.classList.contains('bg-gray-200')){
+        mainContainer.classList.remove('bg-gray-200');
+        mainContainer.classList.add('bg-black');
+        notesContainer.classList.remove('bg-white');
+        notesContainer.classList.add('bg-black');
+        notesForm.classList.remove('bg-white');
+        notesForm.classList.add('bg-black');
+        noteHeaderTitle.classList.add('text-white')
+        labels.forEach(label => {
+          label.classList.add('text-white');
+        })
+      } else {
+        mainContainer.classList.remove('bg-black');
+        mainContainer.classList.add('bg-gray-200');
+        notesContainer.classList.add('bg-white');
+        notesContainer.classList.remove('bg-black');
+        notesForm.classList.add('bg-white');
+        notesForm.classList.remove('bg-black');
+        noteHeaderTitle.classList.remove('text-white')
+        labels.forEach(label => {
+          label.classList.remove('text-white');
+        })
+      }
     }
 
   </script>
