@@ -21,31 +21,55 @@
       border: 1px solid red;
     }
 
-    .show-form {
+    .modal-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
       display: none;
     }
 
-    @media screen and (max-width: 800px) {
-      form {
-        display: none;
-      }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
 
-      .show-form {
-        position: absolute;
-        background-color: greenyellow;
-        top: 100px;
-        right: 50px;
-        height: 40px;
-        width: 40px;
-        text-align: center;
-        font-size: x-large;
-        cursor: pointer;
-        border-radius: 50%;
-        display: unset;
-      }
+    .profile-images {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
 
+    .profile-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      cursor: pointer;
     }
   </style>
+
+  <div class="modal-container" id="modalContainer">
+    <div class="modal-content">
+      <h2>Choose your profile picture and username</h2>
+      <div class="profile-images">
+        <img class="profile-image" src="profiles/user.png" alt="Default" onclick="selectProfile('profiles/user.png')" />
+        <img class="profile-image" src="profiles/boy.png" alt="Boy" onclick="selectProfile('profiles/boy.png')" />
+        <img class="profile-image" src="profiles/girl.png" alt="Girl" onclick="selectProfile('profiles/girl.png')" />
+      </div>
+      <input type="text" id="usernameInput" placeholder="Enter your username" />
+      <button onclick="saveProfile()">Save</button>
+    </div>
+  </div>
+
   <main class="main-container bg-gray-200 flex justify-center items-center h-screen gap-4 p-20 relative">
     <div class="notes p-4 rounded-md shadow-2xl bg-white">
       <span class="flex justify-between">
@@ -54,10 +78,11 @@
           <h1 class="note-container-header-text text-xl">Notes</h1>
         </div>
         <div class="filters">
-          <select onchange="filterNotesByCategoryAndUsername()" name="username-filter" id="username-filter">
+          <select onchange="filterNotesByUsername()" name="username-filter" id="username-filter">
             <option value="">All Users</option>
+            <!-- Usernames will be dynamically added here using JavaScript -->
           </select>
-          <select onchange="filterNotesByCategoryAndUsername()" name="category-filter" id="category-filter">
+          <select onchange="filterNotesByCategory()" name="category-filter" id="category-filter">
             <option value="">All</option>
             <option value="home">Home</option>
             <option value="hobbies">Hobbies</option>
@@ -68,20 +93,9 @@
       <div class="notes-container flex flex-col gap-5"></div>
     </div>
     <form class="notes-form rounded-md shadow-2xl bg-white p-4">
-      <div class="flex place-content-between p-4 items-center">
-        <div class="flex gap-2">
-          <label class="dark-text-toggle" for="profilePicture">Avatar:</label>
-          <select name="profilePicture" id="profilePic" aria-placeholder="Avatar">
-            <option value="default" selected>Default</option>
-            <option value="boy">Boy</option>
-            <option value="girl">Girl</option>
-          </select>
-        </div>
-        <div class="flex gap-2 items-center justify-end">
-          <label class="dark-text-toggle" for="userName">Username: </label>
-          <input class="border-2 border rounded-md px-2 py-1 w-1/2" type="text" name="userName" id="userName">
-        </div>
-      </div>
+      <!-- Add this within the user profile display section -->
+      <button onclick="logout()">Logout</button>
+
       <textarea class="border-2 rounded-md w-full bg-gray-200" name="" id="" cols="30" rows="10"></textarea>
       <p id="text-area-error" class="hidden text-red-500">Please add some content!</p>
       <!-- note content -->
@@ -131,12 +145,6 @@
       work: "bg-yellow-200"
     };
 
-    let profileToPictureMap = {
-      default: "profiles/user.png",
-      boy: "profiles/boy.png",
-      girl: "profiles/girl.png"
-    }
-
     let notesContainer = document.querySelector('.notes-container');
     let notes = localStorage.getItem('notes') ? JSON.parse(localStorage.getItem('notes')) : [];
 
@@ -151,31 +159,36 @@
     }
 
     function generatNoteHTML(noteItem) {
+      let userProfileHTML = `
+    <div class="user-profile">
+      <img class="profile-image" src="${noteItem.userProfile.profileImage}" alt="User Profile" />
+      <span>${noteItem.userProfile.username}</span>
+    </div>
+  `;
+
       return `
-        <div class="flex items-center ${categoryToClassesMap[noteItem.category]} gap-5 p-4 rounded-md bg-gray-200 relative">
-            <div class="h-12 w-12 overflow-hidden rounded-full">
-                <img src="${profileToPictureMap[noteItem.avatar]}" alt="" />
-            </div>
-            <div>
-              <p class="font-semibold"> ${noteItem.userName} </p>
-              <p>${noteItem.content}</p>
-            </div>
-            <div class="actions absolute top-4 right-4 flex gap-3">
-              <p class="rounded-full h-8 w-8 p-3 bg-white flex justify-center items-center cursor-pointer">
-                <span onclick="editNote('${noteItem.id}')"> edit </span>
-              </p>
-              <p class="rounded-full h-8 w-8 p-3 bg-white flex justify-center items-center cursor-pointer">
-                <span onclick="deleteNote('${noteItem.id}')">X</span>
-              </p>
-            </div>
-        </div>
-        `;
+    <div class="flex items-center ${categoryToClassesMap[noteItem.category]} gap-5 p-4 rounded-md bg-gray-200 relative">
+      ${userProfileHTML}
+      <div>
+        <p>${noteItem.content}</p>
+      </div>
+      <div class="actions absolute top-4 right-4 flex gap-3">
+        <p class="rounded-full h-8 w-8 p-3 bg-white flex justify-center items-center cursor-pointer">
+          <span onclick="editNote('${noteItem.id}')"> edit </span>
+        </p>
+        <p class="rounded-full h-8 w-8 p-3 bg-white flex justify-center items-center cursor-pointer">
+          <span onclick="deleteNote('${noteItem.id}')">X</span>
+        </p>
+      </div>
+    </div>
+  `;
     }
 
     function deleteNote(noteID) {
       let newNotes = notes.filter(function (note) {
-        // if same ID that we want to delete, return false
         if (noteID === note.id) {
+          removeUsernameFromExistingProfiles(note.userProfile.username);
+
           return false;
         } else {
           return true;
@@ -184,33 +197,46 @@
       updateNotesArray(newNotes)
     }
 
+    function removeUsernameFromExistingProfiles(username) {
+      let existingProfiles = JSON.parse(localStorage.getItem('existingProfiles')) || [];
+      let index = existingProfiles.findIndex(profile => profile.username === username);
+
+      if (index !== -1) {
+        existingProfiles.splice(index, 1);
+        localStorage.setItem('existingProfiles', JSON.stringify(existingProfiles));
+      }
+    }
+
     let textAreaInput = document.querySelector('textarea')
     let textAreaInputError = document.querySelector('#text-area-error')
 
     let categoryInput = document.querySelector('#category')
     let categoryInputError = document.querySelector('#category-input-error')
 
-    let avatarInput = document.querySelector('#profilePic')
-
-    let userNameInput = document.querySelector('#userName')
-
     function addNote() {
       let contentValid = validateTextAreaInput();
       let priorityValid = validatePriorityInput();
       let categoryValid = validateCategoryInput();
-      // validate user inputs
+
       if (contentValid && priorityValid && categoryValid) {
         let priorityInputValue = document.querySelector('input[name="priority"]:checked').value
+        let userProfile = JSON.parse(localStorage.getItem('userProfile'));
+
         let newNote = {
           id: noteBeingEdited?.id ? noteBeingEdited.id : generateNoteID(),
-          avatar: avatarInput.value,
-          userName: userNameInput.value
+          content: textAreaInput.value,
+          priority: priorityInputValue,
+          category: categoryInput.value,
+          userProfile: userProfile,
         };
-        newNote.content = textAreaInput.value
-        newNote['priority'] = priorityInputValue
-        newNote['category'] = categoryInput.value
 
-        // push to notes array
+        existingProfiles.push({
+          username: userProfile.username,
+          profileImage: userProfile.profileImage,
+        });
+
+        localStorage.setItem('existingProfiles', JSON.stringify(existingProfiles));
+
         updateNotesArray([...notes, newNote]);
         populateFormInputs();
       }
@@ -218,7 +244,6 @@
     }
 
     function generateNoteID() {
-      // We can use Math.random()
       return Date.now().toString();
     }
 
@@ -253,7 +278,6 @@
 
     let noteBeingEdited;
     function editNote(noteID) {
-      // get note
       noteBeingEdited = notes.find(function (note) {
         return noteID === note.id
       })
@@ -261,22 +285,20 @@
         return;
       }
 
-      // remove from notes array
-      deleteNote(noteID)
+      let userProfile = JSON.parse(localStorage.getItem('userProfile'));
 
-      // populate in inputs
-      populateFormInputs(noteBeingEdited)
+      if (userProfile && userProfile.username === noteBeingEdited.userProfile.username) {
+        deleteNote(noteID);
+
+        populateFormInputs(noteBeingEdited);
+      } else {
+        alert("You are not allowed to edit this note.");
+      }
+
     }
 
     function populateFormInputs(noteObject = {}) {
-      // avatar
-      avatarInput.value = noteObject.avatar || 'default';
-      // username
-      userNameInput.value = noteObject.userName || '';
-      // content
       textAreaInput.value = noteObject.content || '';
-      // priority
-      // document.querySelectorAll('input[type=radio]')[4].value
       document.querySelectorAll('input[name="priority"]').forEach(function (radioInput) {
         if (radioInput.value == noteObject.priority) {
           radioInput.checked = true;
@@ -285,7 +307,6 @@
         }
       })
 
-      // category
       categoryInput.value = noteObject.category || ''
 
     }
@@ -293,10 +314,7 @@
     function updateNotesArray(notesArray = []) {
       notes = notesArray
       localStorage.setItem('notes', JSON.stringify(notes))
-      // reflect changes to UI
-      // never call outside of this function
       updateUINotesContainer();
-      populateUsernameFilterOptions();
     }
 
     function sortNotesAsc() {
@@ -312,45 +330,34 @@
       updateNotesArray(sortedNotesArray)
     }
 
-    // function filterNotesByCategory() {
-    //   let filteredArray = notes.filter(function (noteItem) {
-    //     if (!this.event.target.value || noteItem.category == this.event.target.value) {
-    //       return true;
-    //     }
-    //     return false;
-    //   })
+    function filterNotesByCategory() {
+      let filteredArray = notes.filter(function (noteItem) {
+        if (!this.event.target.value || noteItem.category == this.event.target.value) {
+          return true;
+        }
+        return false;
+      })
 
-    //   updateUINotesContainer(filteredArray)
-    // }
-
-    // Update username filter
-    function populateUsernameFilterOptions() {
-      let usernameFilterSelect = document.getElementById('username-filter');
-
-      usernameFilterSelect.innerHTML = '<option value="">All Users</option>';
-
-      // Get UNIQUE usernames from notes
-      let uniqueUsernames = [...new Set(notes.map(note => note.userName))];
-
-      uniqueUsernames.forEach(username => {
-        let option = document.createElement('option');
-        option.value = username;
-        option.textContent = username;
-        usernameFilterSelect.appendChild(option);
-      });
+      updateUINotesContainer(filteredArray)
     }
 
-    populateUsernameFilterOptions();
+    let existingProfiles = JSON.parse(localStorage.getItem('existingProfiles')) || [];
 
-    function filterNotesByCategoryAndUsername() {
-      let categoryFilterValue = document.getElementById('category-filter').value;
-      let usernameFilterValue = document.getElementById('username-filter').value;
+    let usernameFilterSelect = document.getElementById('username-filter');
+    existingProfiles.forEach(profile => {
+      let option = document.createElement('option');
+      option.value = profile.username;
+      option.textContent = profile.username;
+      usernameFilterSelect.appendChild(option);
+    });
 
+    function filterNotesByUsername() {
+      let selectedUsername = document.getElementById('username-filter').value;
       let filteredArray = notes.filter(function (noteItem) {
-        let categoryMatch = !categoryFilterValue || noteItem.category == categoryFilterValue;
-        let usernameMatch = !usernameFilterValue || noteItem.userName == usernameFilterValue;
-
-        return categoryMatch && usernameMatch;
+        if (!selectedUsername || noteItem.userProfile.username === selectedUsername) {
+          return true;
+        }
+        return false;
       });
 
       updateUINotesContainer(filteredArray);
@@ -393,6 +400,58 @@
           label.classList.remove('text-white');
         })
       }
+    }
+
+    let userProfile = localStorage.getItem('userProfile');
+
+    if (!userProfile) {
+      document.getElementById('modalContainer').style.display = 'flex';
+    }
+
+    function selectProfile(profileImage) {
+      document.querySelectorAll('.profile-image').forEach(img => {
+        img.style.border = 'none';
+      });
+      document.querySelector(`.profile-image[src="${profileImage}"]`).style.border = '2px solid #3490dc';
+      selectedProfile = profileImage;
+    }
+
+    function saveProfile() {
+      let username = document.getElementById('usernameInput').value;
+      if (username.trim() === '') {
+        alert('Please enter a username.');
+        return;
+      }
+
+      if (!selectedProfile) {
+        alert('Please choose a profile picture.');
+        return;
+      }
+
+      let userObject = {
+        username: username,
+        profileImage: selectedProfile,
+      };
+
+      localStorage.setItem('userProfile', JSON.stringify(userObject));
+      document.getElementById('modalContainer').style.display = 'none';
+    }
+
+    userProfile = JSON.parse(localStorage.getItem('userProfile'));
+
+    if (userProfile) {
+      let userProfileContainer = document.createElement('div');
+      userProfileContainer.innerHTML = `
+    <img class="profile-image" src="${userProfile.profileImage}" alt="User Profile" />
+    <span>${userProfile.username}</span>
+  `;
+      document.querySelector('.main-container').appendChild(userProfileContainer);
+    }
+
+    function logout() {
+      localStorage.removeItem('userProfile');
+
+      location.reload();
     }
 
   </script>
