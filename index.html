@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" />
   <link href="https://fonts.googleapis.com/css?family=Work+Sans:200,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+  <script src="https://kit.fontawesome.com/ea704375c9.js" crossorigin="anonymous"></script>
   <title>Notes App</title>
 </head>
 
@@ -49,9 +49,9 @@
   <main class="main-container bg-gray-200 flex justify-center items-center h-screen gap-4 p-20 relative">
     <div class="notes p-4 rounded-md shadow-2xl bg-white">
       <span class="flex justify-between">
-        <div class="flex gap-4 items-center">
-          <button onclick="toggleDarkMode()">Toggle</button>
-          <h1 class="note-container-header-text text-xl mb-4">Notes</h1>
+        <div class="flex gap-4 items-center mb-4">
+          <i class="dark-toggle-icon fa-regular fa-moon" style="color: #ff0000;" onclick="toggleDarkMode()"></i>
+          <h1 class="note-container-header-text text-xl">Notes</h1>
         </div>
         <div class="filters">
           <select onchange="filterNotesByCategoryAndUsername()" name="username-filter" id="username-filter">
@@ -99,13 +99,13 @@
           <label class="dark-text-toggle" for="priority-1">Very Low</label>
         </div>
         <div class="radio-input"><input type="radio" id="priority-2" name="priority" value="2" /> <label
-          class="dark-text-toggle" for="priority-2">Low</label></div>
+            class="dark-text-toggle" for="priority-2">Low</label></div>
         <div class="radio-input"><input type="radio" id="priority-3" name="priority" value="3" /> <label
-          class="dark-text-toggle" for="priority-3">Medium</label></div>
+            class="dark-text-toggle" for="priority-3">Medium</label></div>
         <div class="radio-input"><input type="radio" id="priority-4" name="priority" value="4" /> <label
-          class="dark-text-toggle" for="priority-4">High</label></div>
+            class="dark-text-toggle" for="priority-4">High</label></div>
         <div class="radio-input"><input type="radio" id="priority-5" name="priority" value="5" /> <label
-          class="dark-text-toggle" for="priority-5">Very High</label></div>
+            class="dark-text-toggle" for="priority-5">Very High</label></div>
         <p id="priority-input-error" class="hidden text-red-500">Please pick a priority!</p>
       </div>
       <!-- note category -->
@@ -362,15 +362,19 @@
       let noteHeaderTitle = document.querySelector('.note-container-header-text');
       let notesForm = document.querySelector('.notes-form');
       let labels = document.querySelectorAll('.dark-text-toggle')
+      let darkToggleIcon = document.querySelector('.dark-toggle-icon');
 
-      if(mainContainer.classList.contains('bg-gray-200')){
+      if (mainContainer.classList.contains('bg-gray-200')) {
         mainContainer.classList.remove('bg-gray-200');
         mainContainer.classList.add('bg-black');
         notesContainer.classList.remove('bg-white');
         notesContainer.classList.add('bg-black');
         notesForm.classList.remove('bg-white');
         notesForm.classList.add('bg-black');
-        noteHeaderTitle.classList.add('text-white')
+        noteHeaderTitle.classList.add('text-white');
+        darkToggleIcon.classList.remove('fa-regular.fa-moon');
+        darkToggleIcon.classList.add('fa-regular.fa-sun');
+
         labels.forEach(label => {
           label.classList.add('text-white');
         })
@@ -381,7 +385,10 @@
         notesContainer.classList.remove('bg-black');
         notesForm.classList.add('bg-white');
         notesForm.classList.remove('bg-black');
-        noteHeaderTitle.classList.remove('text-white')
+        noteHeaderTitle.classList.remove('text-white');
+        darkToggleIcon.classList.add('fa-regular.fa-moon');
+        darkToggleIcon.classList.remove('fa-regular.fa-sun');
+
         labels.forEach(label => {
           label.classList.remove('text-white');
         })
